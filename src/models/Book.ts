@@ -24,7 +24,20 @@ export const findAllBooks = async ({
     query.where({ author_id: author });
   }
 
-  const total = await query.clone().count('* as count').first();
+  // Get total count first
+  const countResult = await db('books')
+    .count('* as count')
+    .modify((queryBuilder) => {
+      if (search) {
+        queryBuilder.where('title', 'ilike', `%${search}%`);
+      }
+      if (author) {
+        queryBuilder.where({ author_id: author });
+      }
+    })
+    .first();
+
+  // Get paginated data
   const data = await query
     .limit(limit)
     .offset((page - 1) * limit)
@@ -32,7 +45,7 @@ export const findAllBooks = async ({
 
   return {
     data,
-    total: Number(total?.count) || 0,
+    total: Number(countResult?.count) || 0,
   };
 };
 

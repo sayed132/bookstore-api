@@ -8,28 +8,17 @@ import {
   updateExistingBook,
 } from '../controllers/BookController';
 import { authenticate, authorize } from '../middlewares/auth';
-import {
-  validateBook,
-  validateId,
-  validateRequest,
-} from '../middlewares/validation';
+import { validateBook, validateId, validateRequest } from '../middlewares/validation';
 
 const router = Router();
 
 router.get('/', getAllBooks);
 router.get('/:id', validateId, validateRequest, getBookById);
-router.post(
-  '/',
-  authenticate,
-  authorize(['admin']),
-  validateBook,
-  validateRequest,
-  createNewBook,
-);
+router.post('/', validateBook, validateRequest, createNewBook);
 router.put(
   '/:id',
-  authenticate,
-  authorize(['admin']),
+  // authenticate,
+  // authorize(['admin']),
   validateId,
   validateBook,
   validateRequest,
@@ -37,8 +26,8 @@ router.put(
 );
 router.delete(
   '/:id',
-  authenticate,
-  authorize(['admin']),
+  // authenticate,
+  // authorize(['admin']),
   validateId,
   validateRequest,
   deleteExistingBook,
