@@ -28,7 +28,7 @@ router.put(
   // authorize(['admin']),
   validateId,
   validateAuthor,
-  validateRequest,
+  // validateRequest,
   updateExistingAuthor,
 );
 router.delete(

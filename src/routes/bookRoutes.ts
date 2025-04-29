@@ -21,7 +21,7 @@ router.put(
   // authorize(['admin']),
   validateId,
   validateBook,
-  validateRequest,
+  // validateRequest,
   updateExistingBook,
 );
 router.delete(
