@@ -1,5 +1,5 @@
 import db from '../config/database';
-import { Author, AuthorWithBooks } from '../types';
+import { Author } from '../types';
 
 interface PaginationParams {
   page: number;
@@ -40,7 +40,9 @@ export const findAllAuthors = async ({
   };
 };
 
-export const findAuthorById = async (id: number): Promise<Author | undefined> => {
+export const findAuthorById = async (
+  id: number,
+): Promise<Author | undefined> => {
   return db('authors').where({ id }).first();
 };
 
@@ -65,7 +67,10 @@ export const updateAuthor = async (
     ...author,
     updated_at: new Date(),
   };
-  const [updatedAuthor] = await db('authors').where({ id }).update(updateData).returning('*');
+  const [updatedAuthor] = await db('authors')
+    .where({ id })
+    .update(updateData)
+    .returning('*');
   return updatedAuthor;
 };
 
@@ -74,10 +79,34 @@ export const deleteAuthor = async (id: number): Promise<boolean> => {
   return count > 0;
 };
 
-export const findAuthorWithBooks = async (id: number): Promise<AuthorWithBooks | undefined> => {
+export const findAuthorWithBooks = async (
+  id: number,
+  page = 1,
+  limit = 10,
+): Promise<
+  { author: Author; books: { data: Book[]; total: number } } | undefined
+> => {
   const author = await db('authors').where({ id }).first();
   if (!author) return undefined;
 
-  const books = await db('books').where({ author_id: id });
-  return { ...author, books };
+  // Get total count of books
+  const countResult = await db('books')
+    .where({ author_id: id })
+    .count('* as count')
+    .first();
+
+  // Get paginated books
+  const books = await db('books')
+    .where({ author_id: id })
+    .limit(limit)
+    .offset((page - 1) * limit)
+    .orderBy('created_at', 'desc');
+
+  return {
+    author,
+    books: {
+      data: books,
+      total: Number(countResult?.count) || 0,
+    },
+  };
 };

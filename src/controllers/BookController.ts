@@ -16,7 +16,22 @@ export const getAllBooks = async (req: Request, res: Response) => {
     const author = req.query.author ? Number(req.query.author) : undefined;
 
     const { data, total } = await findAllBooks({ page, limit, search, author });
+
+    if (data.length === 0) {
+      return res.json({
+        message: 'No books found',
+        data: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          totalPages: 0,
+        },
+      });
+    }
+
     res.json({
+      message: 'Books fetched successfully',
       data,
       pagination: {
         page,
@@ -37,7 +52,10 @@ export const getBookById = async (req: Request, res: Response) => {
       res.status(404).json({ error: 'Book not found' });
       return;
     }
-    res.json(book);
+    res.json({
+      message: 'Single Book fetched successfully',
+      data: book,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch book' });
   }
@@ -46,7 +64,10 @@ export const getBookById = async (req: Request, res: Response) => {
 export const createNewBook = async (req: Request, res: Response) => {
   try {
     const book = await createBook(req.body);
-    res.status(201).json(book);
+    res.status(200).json({
+      message: 'Book created successfully',
+      data: book,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create book' });
   }
@@ -59,7 +80,10 @@ export const updateExistingBook = async (req: Request, res: Response) => {
       res.status(404).json({ error: 'Book not found' });
       return;
     }
-    res.json(book);
+    res.json({
+      message: 'Book updated successfully',
+      data: book,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update book' });
   }
@@ -72,7 +96,12 @@ export const deleteExistingBook = async (req: Request, res: Response) => {
       res.status(404).json({ error: 'Book not found' });
       return;
     }
-    res.status(204).send();
+
+    res.status(200).json({
+      message: 'Book deleted successfully',
+      deletedCount: 1,
+      success: true,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete book' });
   }

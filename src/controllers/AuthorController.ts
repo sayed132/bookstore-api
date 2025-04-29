@@ -15,7 +15,22 @@ export const getAllAuthors = async (req: Request, res: Response) => {
     const search = req.query.search as string;
 
     const { data, total } = await findAllAuthors({ page, limit, search });
+
+    if (data.length === 0) {
+      return res.json({
+        message: 'No authors found',
+        data: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          totalPages: 0,
+        },
+      });
+    }
+
     res.json({
+      message: 'Authors fetched successfully',
       data,
       pagination: {
         page,
@@ -36,7 +51,10 @@ export const getAuthorById = async (req: Request, res: Response) => {
       res.status(404).json({ error: 'Author not found' });
       return;
     }
-    res.json(author);
+    res.json({
+      message: 'Single Author fetched successfully',
+      data: author,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch author' });
   }
@@ -45,7 +63,10 @@ export const getAuthorById = async (req: Request, res: Response) => {
 export const createNewAuthor = async (req: Request, res: Response) => {
   try {
     const author = await createAuthor(req.body);
-    res.status(201).json(author);
+    res.status(200).json({
+      message: 'Author created successfully',
+      data: author,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create author' });
   }
@@ -58,7 +79,10 @@ export const updateExistingAuthor = async (req: Request, res: Response) => {
       res.status(404).json({ error: 'Author not found' });
       return;
     }
-    res.json(author);
+    res.json({
+      message: 'Author updated successfully',
+      data: author,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update author' });
   }
@@ -71,7 +95,12 @@ export const deleteExistingAuthor = async (req: Request, res: Response) => {
       res.status(404).json({ error: 'Author not found' });
       return;
     }
-    res.status(204).send();
+
+    res.json({
+      message: 'Author deleted successfully',
+      deletedCount: 1,
+      success: true,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete author' });
   }
@@ -79,12 +108,52 @@ export const deleteExistingAuthor = async (req: Request, res: Response) => {
 
 export const getAuthorWithBooks = async (req: Request, res: Response) => {
   try {
-    const author = await findAuthorWithBooks(Number(req.params.id));
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const author = await findAuthorWithBooks(
+      Number(req.params.id),
+      page,
+      limit,
+    );
+
     if (!author) {
       res.status(404).json({ error: 'Author not found' });
       return;
     }
-    res.json(author);
+
+    if (author.books.data.length === 0) {
+      return res.json({
+        message: 'Author found but no books available',
+        data: {
+          author: author.author,
+          books: {
+            data: [],
+            pagination: {
+              page,
+              limit,
+              total: 0,
+              totalPages: 0,
+            },
+          },
+        },
+      });
+    }
+
+    res.json({
+      message: 'Author with books fetched successfully',
+      data: {
+        author: author.author,
+        books: {
+          data: author.books.data,
+          pagination: {
+            page,
+            limit,
+            total: author.books.total,
+            totalPages: Math.ceil(author.books.total / limit),
+          },
+        },
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch author with books' });
   }

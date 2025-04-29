@@ -13,15 +13,21 @@ export const findAllBooks = async ({
   limit = 10,
   search,
   author,
-}: PaginationParams): Promise<{ data: Book[]; total: number }> => {
-  const query = db('books').select('*');
+}: PaginationParams): Promise<{ data: BookWithAuthor[]; total: number }> => {
+  const query = db('books')
+    .select(
+      'books.*',
+      'authors.name as author_name',
+      'authors.bio as author_bio',
+    )
+    .leftJoin('authors', 'books.author_id', 'authors.id');
 
   if (search) {
-    query.where('title', 'ilike', `%${search}%`);
+    query.where('books.title', 'ilike', `%${search}%`);
   }
 
   if (author) {
-    query.where({ author_id: author });
+    query.where('books.author_id', author);
   }
 
   // Get total count first
@@ -37,11 +43,21 @@ export const findAllBooks = async ({
     })
     .first();
 
-  // Get paginated data
+  // Get paginated data with author information
   const data = await query
     .limit(limit)
     .offset((page - 1) * limit)
-    .orderBy('created_at', 'desc');
+    .orderBy('books.created_at', 'desc')
+    .then((books) =>
+      books.map((book) => ({
+        ...book,
+        author: {
+          id: book.author_id,
+          name: book.author_name,
+          bio: book.author_bio,
+        },
+      })),
+    );
 
   return {
     data,
