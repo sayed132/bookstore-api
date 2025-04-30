@@ -4,7 +4,6 @@ import express from 'express';
 import { initializeDatabase } from './config/initDatabase';
 import authorRoutes from './routes/authorRoutes';
 import bookRoutes from './routes/bookRoutes';
-import userRoutes from './routes/userRoutes';
 
 dotenv.config();
 
@@ -18,7 +17,6 @@ app.use(express.json());
 // Routes
 app.use('/api/authors', authorRoutes);
 app.use('/api/books', bookRoutes);
-app.use('/api/users', userRoutes);
 
 // Error handling middleware
 app.use(
@@ -26,7 +24,7 @@ app.use(
     err: Error,
     req: express.Request,
     res: express.Response,
-    next: express.NextFunction,
+    _next: express.NextFunction,
   ) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Something went wrong!' });
@@ -49,5 +47,5 @@ async function startServer() {
 startServer();
 
 app.get('/', (req: express.Request, res: express.Response) => {
-  res.send('Hello World');
+  res.send('Welcome to the Bookstore API');
 });
